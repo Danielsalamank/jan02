@@ -7,7 +7,6 @@ import { fetch as fetchTauri } from '@tauri-apps/plugin-http'
 
 export interface WhisperConfig {
   apiUrl: string
-  apiKey?: string
   task?: 'transcribe' | 'translate'
   language?: string
   output?: 'txt' | 'vtt' | 'srt' | 'tsv' | 'json'
@@ -29,6 +28,7 @@ export interface TranscriptionError {
 
 /**
  * Transcribe audio using Whisper ASR Webservice API
+ * Uses Tauri's native HTTP when available to bypass browser CORS
  * @param audioBlob - Audio file to transcribe
  * @param config - Whisper API configuration
  * @returns Transcribed text
@@ -147,7 +147,6 @@ export function getDefaultWhisperConfig(): WhisperConfig {
   // Default configuration - users should update this
   return {
     apiUrl: 'https://whisper.contextcompany.com.co/asr',
-    apiKey: undefined,
     task: 'transcribe', // Default to transcription
     language: 'auto', // Auto-detect language
     output: 'txt', // Default to plain text
