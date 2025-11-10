@@ -4,6 +4,7 @@
  */
 
 import { invoke } from '@tauri-apps/api/core'
+import i18n from '@/i18n/setup'
 
 export interface WhisperConfig {
   apiUrl: string
@@ -42,6 +43,14 @@ export async function transcribeAudio(
     const arrayBuffer = await audioBlob.arrayBuffer()
     const audioData = Array.from(new Uint8Array(arrayBuffer))
 
+    // Debug: Log audio information
+    console.log('[Whisper Debug] Audio Blob info:', {
+      size: audioBlob.size,
+      type: audioBlob.type,
+      arrayBufferSize: arrayBuffer.byteLength,
+      audioDataLength: audioData.length,
+    })
+
     // Build query parameters object for /asr endpoint
     const queryParams: Record<string, string> = {}
 
@@ -77,6 +86,7 @@ export async function transcribeAudio(
 
     console.log('[Whisper] Using Tauri backend to bypass CORS')
     console.log('[Whisper] Making request to:', config.apiUrl)
+    console.log('[Whisper] Query params:', queryParams)
 
     // Use Tauri backend command to bypass CORS
     const response = await invoke<{
@@ -90,6 +100,13 @@ export async function transcribeAudio(
       audioFilename: 'recording.webm',
       fieldName: 'audio_file',
       headers: null,
+    })
+
+    console.log('[Whisper Debug] Response received:', {
+      status: response.status,
+      bodyLength: response.body.length,
+      body: response.body,
+      headers: response.headers,
     })
 
     if (response.status !== 200) {
@@ -145,11 +162,14 @@ export function getDefaultWhisperConfig(): WhisperConfig {
     }
   }
 
-  // Default configuration - users should update this
+  // Default configuration - uses current Jan language setting
+  // Get current language from Jan's i18n settings
+  const currentLanguage = i18n.language || 'en'
+
   return {
     apiUrl: 'https://whisper.contextcompany.com.co/asr',
     task: 'transcribe', // Default to transcription
-    language: 'auto', // Auto-detect language
+    language: currentLanguage, // Use Jan's current language (es, en, fr, ru, etc.)
     output: 'txt', // Default to plain text
     encode: true, // Enable encoding (recommended)
     vadFilter: false, // Voice activity detection filter
